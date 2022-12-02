@@ -20,9 +20,22 @@
   (hash "X" rock
         "Y" paper
         "Z" scissors))
+(define outcomes
+  (hash "X" (hash 'rock     (hash-ref us "Z")
+                  'paper    (hash-ref us "X")
+                  'scissors (hash-ref us "Y"))
+        "Y" (hash 'rock     (hash-ref us "X")
+                  'paper    (hash-ref us "Y")
+                  'scissors (hash-ref us "Z"))
+        "Z" (hash 'rock     (hash-ref us "Y")
+                  'paper    (hash-ref us "Z")
+                  'scissors (hash-ref us "X"))))
 
-(define (get-score their-throw our-throw)
-  (let* ([our-full-throw    (hash-ref us   our-throw)]
+(define (get-us their-throw outcome)
+  (hash-ref (hash-ref outcomes outcome) (shot-name (hash-ref them their-throw))))
+
+(define (get-score their-throw outcome)
+  (let* ([our-full-throw    (get-us their-throw outcome)]
          [their-full-throw  (hash-ref them their-throw)]
          [our-throw-score   (shot-amount    our-full-throw)]
          [our-win-score     (our-win-amount our-full-throw
@@ -47,5 +60,9 @@
        game-lines->total-score))
 
 (define example '("A Y" "B X" "C Z"))
+;;part one:
 ;(game-lines->total-score example) ; 15
 ;(file-name->total-score "input.txt") ; 12276
+;;part two:
+;(game-lines->total-score example) ; 12
+;(file-name->total-score "input.txt") ; 9975
