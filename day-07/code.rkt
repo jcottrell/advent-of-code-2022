@@ -54,15 +54,40 @@
                                               (+ current-file-size size))
                                             0))]))
 
-(define (file-name->total-of-smaller-files file-name smaller-than)
+(define (file-name->directory-hash file-name)
   (~>> file-name
        file->lines
-       (parse-lines _ "/" (make-immutable-hash))
+       (parse-lines _ "/" (make-immutable-hash))))
+
+(define (file-name->total-of-smaller-files file-name smaller-than)
+  (~>> file-name
+       file-name->directory-hash
        hash->list
        (filter (lambda (pair)
                  (<= (cdr pair) smaller-than)))
        (map (lambda (pair) (cdr pair)))
        (apply +)))
 
+;(file-name->directory-hash "example.txt")
 ;(file-name->total-of-smaller-files "example.txt" 100000) ; 95437
+;(file-name->directory-hash "input.txt")
 ;(file-name->total-of-smaller-files "input.txt" 100000)   ; 2031851
+
+; Part 2
+;
+(define system-size 70000000)
+(define needed-size 30000000)
+(define (file-name->smallest-size-needed file-name total-size update-size)
+  (let* ([directory-hash (file-name->directory-hash file-name)]
+         [free-space     (- total-size (hash-ref directory-hash "/"))]
+         [diff-size      (- update-size free-space)])
+    (cond [(> free-space update-size) (error "Enough space is available:" free-space)]
+          [else (~>> (hash->list directory-hash)
+                     (sort _ (lambda (a b)
+                               (< (cdr a) (cdr b))))
+                     (findf (lambda (d)
+                              (> (cdr d) diff-size)))
+                     cdr)])))
+
+;(file-name->smallest-size-needed "example.txt" system-size needed-size) ; 24933642
+;(file-name->smallest-size-needed "input.txt" system-size needed-size) ;
